@@ -34,4 +34,9 @@ class HiveDataFrameSuite extends QueryTest with TestHiveSingleton {
     val hiveClient = spark.sharedState.externalCatalog.asInstanceOf[HiveExternalCatalog].client
     assert(hiveClient.getConf("hive.in.test", "") == "true")
   }
+
+  test("SPARK-17108: INT is acceptable when the expected type is BigInt in spark sql") {
+    spark.sql("create table t(a map<bigint, array<string>>)")
+    spark.sql("select * from t where a[1] is not null").show
+  }
 }

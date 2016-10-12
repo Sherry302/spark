@@ -79,6 +79,13 @@ abstract class DataType extends AbstractDataType {
     DataType.equalsIgnoreNullability(this, other)
 
   /**
+    * Check if `other` can be converted to `this` safely when ignoring nullability
+    * (`StructField.nullable`, `ArrayType.containsNull`, and `MapType.valueContainsNull`).
+    */
+  private[spark] def isConvertibleType(other: DataType): Boolean =
+    DataType.isConvertibleIgnoreNullability(this, other)
+
+  /**
    * Returns the same data type but set all nullability fields are true
    * (`StructField.nullable`, `ArrayType.containsNull`, and `MapType.valueContainsNull`).
    */
@@ -91,9 +98,9 @@ abstract class DataType extends AbstractDataType {
 
   override private[sql] def defaultConcreteType: DataType = this
 
-  override private[sql] def acceptsType(other: DataType): Boolean = sameType(other)
+  override private[sql] def acceptsType(other: DataType): Boolean = sameType(other) ||
+    isConvertibleType(other)
 }
-
 
 /**
  * @since 1.3.0
@@ -212,6 +219,28 @@ object DataType {
             l.name == r.name && equalsIgnoreNullability(l.dataType, r.dataType)
           }
       case (l, r) => l == r
+    }
+  }
+
+  /**
+    * Check if `right` can be converted to `left` safely,
+    * ignoring nullability of ArrayType, MapType, StructType.
+    */
+  private[types] def isConvertibleIgnoreNullability(left: DataType, right: DataType): Boolean = {
+    (left, right) match {
+      case (ArrayType(leftElementType, _), ArrayType(rightElementType, _)) =>
+        equalsIgnoreNullability(leftElementType, rightElementType)
+      case (MapType(leftKeyType, leftValueType, _), MapType(rightKeyType, rightValueType, _)) =>
+        equalsIgnoreNullability(leftKeyType, rightKeyType) &&
+          equalsIgnoreNullability(leftValueType, rightValueType)
+      case (StructType(leftFields), StructType(rightFields)) =>
+        leftFields.length == rightFields.length &&
+          leftFields.zip(rightFields).forall { case (l, r) =>
+            l.name == r.name && equalsIgnoreNullability(l.dataType, r.dataType)
+          }
+      case (l, r) =>
+        left.isInstanceOf[IntegralType] && right.isInstanceOf[IntegralType] &&
+          left.defaultSize >= right.defaultSize
     }
   }
 
