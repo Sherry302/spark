@@ -79,9 +79,9 @@ abstract class DataType extends AbstractDataType {
     DataType.equalsIgnoreNullability(this, other)
 
   /**
-    * Check if `other` can be converted to `this` safely when ignoring nullability
-    * (`StructField.nullable`, `ArrayType.containsNull`, and `MapType.valueContainsNull`).
-    */
+   * Check if `other` can be converted to `this` safely when ignoring nullability
+   * (`StructField.nullable`, `ArrayType.containsNull`, and `MapType.valueContainsNull`).
+   */
   private[spark] def isConvertibleType(other: DataType): Boolean =
     DataType.isConvertibleIgnoreNullability(this, other)
 
@@ -223,9 +223,9 @@ object DataType {
   }
 
   /**
-    * Check if `right` can be converted to `left` safely,
-    * ignoring nullability of ArrayType, MapType, StructType.
-    */
+   * Check if `right` can be converted to `left` safely,
+   * ignoring nullability of ArrayType, MapType, StructType.
+   */
   private[types] def isConvertibleIgnoreNullability(left: DataType, right: DataType): Boolean = {
     (left, right) match {
       case (ArrayType(leftElementType, _), ArrayType(rightElementType, _)) =>
