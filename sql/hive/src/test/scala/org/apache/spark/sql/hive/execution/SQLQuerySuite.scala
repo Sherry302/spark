@@ -68,6 +68,51 @@ class SQLQuerySuite extends QueryTest with SQLTestUtils with TestHiveSingleton {
   import hiveContext._
   import spark.implicits._
 
+  test("weiqing") {
+    //val path = "~/test22"
+
+    // scalastyle:off
+    println(BigDecimal(1, 4)) // 0.0001
+    println(Decimal(1.1, 19, 0).toString) //1
+    println(Decimal(1, 8, 4).toString) //1.0000
+    println(Decimal(1.2, 19, 3).toString) //1
+
+    // spark.range(2).map(x => (Decimal(1.0 * x, 19, 0), Decimal(1.0 * x, 8, 4))).show
+    val ret = spark.range(2)
+
+    /* val t1 = Decimal(1.1 , 19, 0)
+     val t2 = Decimal(1 , 8, 4)
+
+     println (t1.precision)
+     println (t2.precision)
+
+     println (t1.scale)
+     println (t2.scale)*/
+
+    val ret1 = ret.map(x => (Decimal(1.1 , 19, 0), Decimal(1 , 8, 4)))
+
+    // val ret3 = ret.map(x => Decimal(1.0 * x, 19, 0))
+
+    // val ret2 = ret.map(x => (BigDecimal(1, 19), BigDecimal(1, 8)))
+
+    ret1.printSchema()
+    // ret2.printSchema()
+
+
+    // |-- _1: decimal(38,18) (nullable = true)
+    // |-- _2: decimal(38,18) (nullable = true)
+
+    spark.range(3).map(x => (Decimal(2 * x, 19, 3), Decimal(4.1 * x, 8, 4))).show
+
+    /*spark.range(10).map(x => (Decimal(1.0 * x, 19, 0), Decimal(1.0 * x, 8, 4)))
+      .toDF("a", "b").write.parquet(path)
+
+    spark.read.parquet(path).show
+    spark.read.parquet(path).printSchema */
+
+    // scalastyle:on
+  }
+
   test("query global temp view") {
     val df = Seq(1).toDF("i1")
     df.createGlobalTempView("tbl1")

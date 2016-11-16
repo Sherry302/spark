@@ -584,7 +584,7 @@ object ScalaReflection extends ScalaReflection {
 
       case t if definedByConstructorParams(t) =>
         val params = getConstructorParameters(t)
-        val nonNullOutput = CreateNamedStruct(params.flatMap { case (fieldName, fieldType) =>
+        val tmp = params.flatMap { case (fieldName, fieldType) =>
           if (javaKeywords.contains(fieldName)) {
             throw new UnsupportedOperationException(s"`$fieldName` is a reserved keyword and " +
               "cannot be used as field name\n" + walkedTypePath.mkString("\n"))
@@ -594,7 +594,8 @@ object ScalaReflection extends ScalaReflection {
           val clsName = getClassNameFromType(fieldType)
           val newPath = s"""- field (class: "$clsName", name: "$fieldName")""" +: walkedTypePath
           expressions.Literal(fieldName) :: serializerFor(fieldValue, fieldType, newPath) :: Nil
-        })
+        }
+        val nonNullOutput = CreateNamedStruct(tmp)
         val nullOutput = expressions.Literal.create(null, nonNullOutput.dataType)
         expressions.If(IsNull(inputObject), nullOutput, nonNullOutput)
 
