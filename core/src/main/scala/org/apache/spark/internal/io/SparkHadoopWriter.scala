@@ -193,11 +193,15 @@ class HadoopMapRedWriteConfigUtil[K, V: ClassTag](conf: SerializableJobConf)
   override def createCommitter(jobId: Int): HadoopMapReduceCommitProtocol = {
     // Update JobConf.
     HadoopRDD.addLocalConfiguration("", 0, 0, 0, getConf)
+    var path = getConf.get("mapred.output.dir")
+    if (path == null) {
+      path = Utils.createTempDir().getPath + "/mapred-output-dir"
+    }
     // Create commit protocol.
     FileCommitProtocol.instantiate(
       className = classOf[HadoopMapRedCommitProtocol].getName,
       jobId = jobId.toString,
-      outputPath = getConf.get("mapred.output.dir")
+      outputPath = path
     ).asInstanceOf[HadoopMapReduceCommitProtocol]
   }
 
@@ -322,10 +326,14 @@ class HadoopMapReduceWriteConfigUtil[K, V: ClassTag](conf: SerializableConfigura
   // --------------------------------------------------------------------------
 
   override def createCommitter(jobId: Int): HadoopMapReduceCommitProtocol = {
+    var path = getConf.get("mapreduce.output.fileoutputformat.outputdir")
+    if (path == null) {
+      path = Utils.createTempDir().getPath + "/mapreduce-output-dir"
+    }
     FileCommitProtocol.instantiate(
       className = classOf[HadoopMapReduceCommitProtocol].getName,
       jobId = jobId.toString,
-      outputPath = getConf.get("mapreduce.output.fileoutputformat.outputdir")
+      outputPath = path
     ).asInstanceOf[HadoopMapReduceCommitProtocol]
   }
 
