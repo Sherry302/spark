@@ -38,6 +38,17 @@ private[hive] class SparkSQLSessionManager(hiveServer: HiveServer2, sqlContext: 
   with ReflectedCompositeService {
 
   private lazy val sparkSqlOperationManager = new SparkSQLOperationManager()
+  private lazy val listener = {
+    val className = "com.hortonworks.spark.atlas.sql.SparkExecutionPlanTracker"
+    try {
+      val clazz = org.apache.spark.util.Utils.classForName(className)
+      clazz.getConstructors.head.newInstance()
+        .asInstanceOf[org.apache.spark.sql.util.QueryExecutionListener]
+    } catch {
+      case scala.util.control.NonFatal(e) =>
+        throw new IllegalArgumentException(s"Error while instantiating '$className':", e)
+    }
+  }
 
   override def init(hiveConf: HiveConf) {
     setSuperField(this, "hiveConf", hiveConf)
@@ -75,7 +86,10 @@ private[hive] class SparkSQLSessionManager(hiveServer: HiveServer2, sqlContext: 
     val ctx = if (sqlContext.conf.hiveThriftServerSingleSession) {
       sqlContext
     } else {
-      sqlContext.newSession()
+      // TODO: Handle hiveThriftServerSingleSession=true later.
+      val session = sqlContext.newSession()
+      session.listenerManager.register(listener)
+      session
     }
     ctx.setConf(HiveUtils.FAKE_HIVE_VERSION.key, HiveUtils.builtinHiveVersion)
     if (sessionConf != null && sessionConf.containsKey("use:database")) {
