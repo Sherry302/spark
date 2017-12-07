@@ -110,6 +110,16 @@ private[sql] class SessionState(
   def refreshTable(tableName: String): Unit = {
     catalog.refreshTable(sqlParser.parseTableIdentifier(tableName))
   }
+
+  private var userName = System.getProperty("user.name")
+
+  def setUser(user: String): Unit = {
+    userName = user
+  }
+
+  def getUser(): String = {
+    userName
+  }
 }
 
 private[sql] object SessionState {
